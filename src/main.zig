@@ -110,6 +110,9 @@ fn uncomment(source: []const u8, buffer: []u8) !usize {
                                 if (nonWhitespaceEncountered)
                                     bufferStart = bufferIndex + 1;
                                 nonWhitespaceEncountered = false;
+                            } else {
+                                buffer[bufferIndex] = source[sourceIndex];
+                                bufferIndex = bufferIndex + 1;
                             }
                         } else {
                             buffer[bufferIndex] = source[sourceIndex];
