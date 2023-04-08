@@ -35,6 +35,7 @@ fn uncomment(source: []const u8, buffer: []u8) !usize {
     var sourceStart: usize = 0;
     var bufferIndex: usize = 0;
     var bufferStart: usize = 0;
+    var nonWhitespaceEncountered = false;
     while (sourceIndex < source.len) {
         switch (state) {
             .SearchComment => {
@@ -86,16 +87,29 @@ fn uncomment(source: []const u8, buffer: []u8) !usize {
             },
             .Transcribe => {
                 switch (source[sourceIndex]) {
+                    std.ascii.whitespace[0],
+                    std.ascii.whitespace[1],
+                    // std.ascii.whitespace[2],
+                    std.ascii.whitespace[3],
+                    std.ascii.whitespace[4],
+                    std.ascii.whitespace[5] => {
+                        buffer[bufferIndex] = source[sourceIndex];
+                        bufferIndex = bufferIndex + 1;
+                    },
                     '\n' => {
                         sourceStart = sourceIndex + 1;
                         bufferStart = bufferIndex + 1;
                         buffer[bufferIndex] = source[sourceIndex];
                         bufferIndex = bufferIndex + 1;
+                        nonWhitespaceEncountered = false;
                     },
                     '/' => {
                         if (sourceIndex < source.len - 1) {
                             if (source[sourceIndex + 1] == '/') {
                                 state = .IgnoreComment;
+                                if (nonWhitespaceEncountered)
+                                    bufferStart = bufferIndex + 1;
+                                nonWhitespaceEncountered = false;
                             }
                         } else {
                             buffer[bufferIndex] = source[sourceIndex];
@@ -103,6 +117,7 @@ fn uncomment(source: []const u8, buffer: []u8) !usize {
                         }
                     },
                     else => {
+                        nonWhitespaceEncountered = true;
                         buffer[bufferIndex] = source[sourceIndex];
                         bufferIndex = bufferIndex + 1;
                     }
